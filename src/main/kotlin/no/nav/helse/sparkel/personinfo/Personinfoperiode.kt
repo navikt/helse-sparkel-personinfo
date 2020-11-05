@@ -1,16 +1,15 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.personinfo
 
 import com.fasterxml.jackson.databind.JsonNode
 import java.time.LocalDate
 
-class Institusjonsoppholdperiode(jsonNode: JsonNode) {
-    val institusjonstype = jsonNode["institusjonstype"].asEnumValue<Institusjonstype>()
+class Personinfoperiode(jsonNode: JsonNode) {
     val kategori = jsonNode["kategori"].asEnumValue<Oppholdstype>()
     val startdato = jsonNode["startdato"].textValue().let { LocalDate.parse(it) }
     val faktiskSluttdato = jsonNode["faktiskSluttdato"]?.takeUnless { it.isNull }?.textValue()?.let { LocalDate.parse(it) }
 
     internal companion object {
-        internal fun List<Institusjonsoppholdperiode>.filtrer(fom: LocalDate, tom: LocalDate) = filter { it.overlapperMed(fom, tom) }
+        internal fun List<Personinfoperiode>.filtrer(fom: LocalDate, tom: LocalDate) = filter { it.overlapperMed(fom, tom) }
     }
 
     internal fun overlapperMed(fom: LocalDate, tom: LocalDate) =

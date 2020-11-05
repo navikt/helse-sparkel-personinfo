@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: sparkel-institusjonsopphold
+  name: sparkel-personinfo
   namespace: tbd
   labels:
     team: tbd
@@ -45,6 +45,6 @@ spec:
     value: helse-rapid-v1
   - name: STS_BASE_URL
     value: http://security-token-service.default.svc.nais.local
-  - name: INSTITUSJONSOPPHOLD_URL
-    value: http://inst2.default.svc.nais.local
+  - name: PDL_URL
+    value: https://pdl-api.nais.preprod.local/graphql
 

@@ -1,8 +1,8 @@
-# Sparkel institusjonsopphold
-![Bygg og deploy](https://github.com/navikt/helse-sparkel-institusjonsopphold/workflows/Bygg%20og%20deploy/badge.svg)
+# Sparkel personinfo
+![Bygg og deploy](https://github.com/navikt/helse-sparkel-personinfo/workflows/Bygg%20og%20deploy/badge.svg)
 
 ## Beskrivelse
-Løser oppslags-behov for institusjonsopphold
+Løser oppslags-behov for personinfo
 
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.

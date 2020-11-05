@@ -1,20 +1,20 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.personinfo
 
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
-import no.nav.helse.sparkel.institusjonsopphold.Institusjonsoppholdperiode.Companion.filtrer
+import no.nav.helse.sparkel.personinfo.Personinfoperiode.Companion.filtrer
 import org.slf4j.LoggerFactory
 
-internal class Institusjonsoppholdløser(
+internal class Personinfoløser(
     rapidsConnection: RapidsConnection,
-    private val institusjonsoppholdService: InstitusjonsoppholdService
+    private val personinfoService: PersoninfoService
 ) : River.PacketListener {
 
     private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
     companion object {
-        const val behov = "Institusjonsopphold"
+        const val behov = "personinfo"
     }
 
     init {
@@ -24,8 +24,8 @@ internal class Institusjonsoppholdløser(
             validate { it.requireKey("@id") }
             validate { it.requireKey("fødselsnummer") }
             validate { it.requireKey("vedtaksperiodeId") }
-            validate { it.require("institusjonsoppholdFom", JsonNode::asLocalDate) }
-            validate { it.require("institusjonsoppholdTom", JsonNode::asLocalDate) }
+            validate { it.require("personinfoOm", JsonNode::asLocalDate) }
+            validate { it.require("personinfoTom", JsonNode::asLocalDate) }
         }.register(this)
     }
 
@@ -35,15 +35,15 @@ internal class Institusjonsoppholdløser(
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
         sikkerlogg.info("mottok melding: ${packet.toJson()}")
-        val fom = packet["institusjonsoppholdFom"].asLocalDate()
-        val tom = packet["institusjonsoppholdTom"].asLocalDate()
-        institusjonsoppholdService.løsningForBehov(
+        val fom = packet["personinfoOm"].asLocalDate()
+        val tom = packet["personinfoTom"].asLocalDate()
+        personinfoService.løsningForBehov(
             packet["@id"].asText(),
             packet["vedtaksperiodeId"].asText(),
             packet["fødselsnummer"].asText()
         ).let { løsning ->
             packet["@løsning"] = mapOf(
-                behov to (løsning?.map { Institusjonsoppholdperiode(it) }?.filtrer(fom, tom) ?: emptyList())
+                behov to (løsning?.map { Personinfoperiode(it) }?.filtrer(fom, tom) ?: emptyList())
             )
             context.send(packet.toJson().also { json ->
                 sikkerlogg.info(

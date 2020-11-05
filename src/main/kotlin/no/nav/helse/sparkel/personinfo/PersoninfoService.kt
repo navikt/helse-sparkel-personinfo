@@ -1,11 +1,11 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.personinfo
 
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
-internal class InstitusjonsoppholdService(private val institusjonsoppholdClient: InstitusjonsoppholdClient) {
+internal class PersoninfoService(private val pdlClient: PdlClient) {
 
     private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -16,7 +16,7 @@ internal class InstitusjonsoppholdService(private val institusjonsoppholdClient:
         fødselsnummer: String
     ): JsonNode? = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
         try {
-            val institusjonsopphold = institusjonsoppholdClient.hentInstitusjonsopphold(
+            val institusjonsopphold = pdlClient.hentPersoninfo(
                 fødselsnummer = fødselsnummer,
                 behovId = behovId
             )

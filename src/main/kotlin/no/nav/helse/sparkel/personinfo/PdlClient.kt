@@ -27,7 +27,7 @@ internal class PdlClient(
     ): JsonNode {
         val stsToken = stsClient.token()
 
-        val body = "placeholder"
+        val body = objectMapper.writeValueAsString(PdlQueryObject(personQuery, Variables(fødselsnummer)))
 
         val request = HttpRequest.newBuilder(URI.create(baseUrl))
             .header("TEMA", "SYK")
@@ -44,22 +44,7 @@ internal class PdlClient(
         response.statusCode().let {
             if(it >= 300) throw RuntimeException("error (responseCode=$it) from PDL")
         }
-        println(response.body()?: null)
+        return objectMapper.readTree(response.body())
 
-
-        val (responseCode, responseBody) = with(URL(baseUrl).openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            connectTimeout = 10000
-            readTimeout = 10000
-
-            val stream: InputStream? = if (responseCode < 300) this.inputStream else this.errorStream
-            responseCode to stream?.bufferedReader()?.readText()
-        }
-
-        if (responseCode >= 300 || responseBody == null) {
-            throw RuntimeException("error (responseCode=$responseCode) from PDL")
-        }
-
-        return objectMapper.readTree(responseBody)
     }
 }

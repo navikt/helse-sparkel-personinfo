@@ -2,10 +2,7 @@ package no.nav.helse.sparkel.personinfo
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.io.InputStream
-import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -42,7 +39,7 @@ internal class PdlClient(
 
         val response = httpClient.send(request, responseHandler)
         response.statusCode().let {
-            if(it >= 300) throw RuntimeException("error (responseCode=$it) from PDL")
+            if (it >= 300) throw RuntimeException("error (responseCode=$it) from PDL")
         }
         return objectMapper.readTree(response.body())
 

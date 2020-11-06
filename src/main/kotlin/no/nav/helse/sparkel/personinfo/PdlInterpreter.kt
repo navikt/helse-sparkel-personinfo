@@ -1,6 +1,7 @@
 package no.nav.helse.sparkel.personinfo
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 
 internal class PdlInterpreter {
@@ -12,15 +13,13 @@ internal class PdlInterpreter {
             pdlReply["errors"].forEach {
                 log.error(it["message"]?.textValue())
             }
-            throw RuntimeException("${pdlReply["errors"].size()} errors")
+            throw RuntimeException("${pdlReply["error(s)"].size()} errors")
         }
 
-        mutableMapOf<String, JsonElement>().also { elements ->
-            pdlReply["errors"].ifNotJsonNull()?.jsonArray?.let { errors ->
-                elements["errors"] = errorMsgs(errors)
-            }
-
-            pdlReply["data"].ifNotJsonNull()?.jsonObject?.let { data ->
+        val resultNode = ObjectMapper().createObjectNode()
+        //if(pdlReply["data"]?
+        return resultNode
+         /*pdlReply["data"].ifNotJsonNull()?.jsonObject?.let { data ->
 
                 data["hentPerson"].ifNotJsonNull()?.jsonObject?.let { hentPerson ->
                     hentPerson["navn"].ifNotJsonNull()?.jsonArray?.let { navn ->
@@ -33,7 +32,7 @@ internal class PdlInterpreter {
                 }
             }
         }
-
+*/
     }
 
 }

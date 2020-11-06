@@ -18,8 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:fa839faa1c")
-
+    implementation("com.github.navikt:rapids-and-rivers:1.20a7b92")
     testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.github.tomakehurst:wiremock:2.27.1") {
         exclude(group = "junit")

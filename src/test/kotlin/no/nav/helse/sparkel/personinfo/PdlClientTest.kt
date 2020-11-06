@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.lang.RuntimeException
 
 internal class PdlInterpreterTest {
@@ -16,9 +15,9 @@ internal class PdlInterpreterTest {
     val om = ObjectMapper()
 
     @Test
-    fun test(){
-        val thrown = assertThrows( RuntimeException::class.java, {pdlInterpreter.interpret(om.readValue(errorPdlResponse)) } )
-        assertEquals("1 error(s)", thrown.message)
+    fun `Skal kaste exception hvis vi får feil fra PDL`(){
+        val thrown = assertThrows( RuntimeException::class.java) { pdlInterpreter.interpret(om.readValue(errorPdlResponse)) }
+        assertEquals("error message", thrown.message)
     }
 
 

@@ -14,36 +14,20 @@ internal class PersoninfoService(private val pdlClient: PdlClient) {
         behovId: String,
         vedtaksperiodeId: String,
         fødselsnummer: String
-    ): JsonNode? = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
-        try {
-            val institusjonsopphold = pdlClient.hentPersoninfo(
-                fødselsnummer = fødselsnummer,
-                behovId = behovId
-            )
-            log.info(
-                "løser behov: {} for {}",
-                keyValue("id", behovId),
-                keyValue("vedtaksperiodeId", vedtaksperiodeId)
-            )
-            sikkerlogg.info(
-                "løser behov: {} for {}",
-                keyValue("id", behovId),
-                keyValue("vedtaksperiodeId", vedtaksperiodeId)
-            )
-            institusjonsopphold
-        } catch (err: Exception) {
-            log.warn(
-                "feil ved henting av institusjonsopphold-data: ${err.message} for {}",
-                keyValue("vedtaksperiodeId", vedtaksperiodeId),
-                err
-            )
-            sikkerlogg.warn(
-                "feil ved henting av institusjonsopphold-data: ${err.message} for {}",
-                keyValue("vedtaksperiodeId", vedtaksperiodeId),
-                err
-            )
-            null
-        }
+    ): JsonNode = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
+        val pdlRespons = pdlClient.hentPersoninfo(fødselsnummer, behovId)
+        log.info(
+            "løser behov: {} for {}",
+            keyValue("id", behovId),
+            keyValue("vedtaksperiodeId", vedtaksperiodeId)
+        )
+        sikkerlogg.info(
+            "løser behov: {} for {}",
+            keyValue("id", behovId),
+            keyValue("vedtaksperiodeId", vedtaksperiodeId),
+            keyValue("svarFraPDL", pdlRespons)
+        )
+        PdlInterpreter().interpret(pdlRespons)
     }
 }
 

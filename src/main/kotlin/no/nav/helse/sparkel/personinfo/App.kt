@@ -18,10 +18,10 @@ internal fun createApp(env: Map<String, String>): RapidsConnection {
         baseUrl = env.getValue("PDL_URL"),
         stsClient = stsClient
     )
-    val institusjonsoppholdService = PersoninfoService(pdlClient)
+    val personinfoService = PersoninfoService(pdlClient)
 
     return RapidApplication.create(env).apply {
-        Personinfoløser(this, institusjonsoppholdService)
+        Personinfoløser(this, personinfoService)
     }
 }
 

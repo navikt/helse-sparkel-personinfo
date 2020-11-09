@@ -5,12 +5,22 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.configureFor
+import com.github.tomakehurst.wiremock.client.WireMock.create
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import no.nav.helse.rapids_rivers.RapidsConnection
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -21,12 +31,13 @@ internal class PersoninfoløserTest {
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .registerModule(JavaTimeModule())
 
-    private lateinit var sendtMelding: JsonNode
+    private val emptyNode = objectMapper.createObjectNode()
+    private lateinit var sendtLøsning: JsonNode
     private lateinit var service: PersoninfoService
 
     private val context = object : RapidsConnection.MessageContext {
         override fun send(message: String) {
-            sendtMelding = objectMapper.readTree(message)
+            sendtLøsning = objectMapper.readTree(message)
         }
 
         override fun send(key: String, message: String) {}
@@ -51,10 +62,10 @@ internal class PersoninfoløserTest {
     fun setup() {
         wireMockServer.start()
         configureFor(create().port(wireMockServer.port()).build())
-        stubEksterneEndepunkt()
+        stubSts()
         service = PersoninfoService(
             PdlClient(
-                baseUrl = wireMockServer.baseUrl(),
+                baseUrl = "${wireMockServer.baseUrl()}/graphql",
                 stsClient = StsRestClient(
                     baseUrl = wireMockServer.baseUrl(),
                     serviceUser = ServiceUser("", "")
@@ -70,30 +81,30 @@ internal class PersoninfoløserTest {
 
     @BeforeEach
     internal fun beforeEach() {
-        sendtMelding = objectMapper.createObjectNode()
+        sendtLøsning = emptyNode
     }
 
     @Test
     fun `løser behov`() {
+        stubOkPdlRespons()
+
         testBehov(enkeltBehov())
 
-        val perioder = sendtMelding.løsning()
+        val løsning = sendtLøsning.personinfoløsning()
 
-        assertEquals(2, perioder.size)
+        assertEquals("1962-07-08", løsning["dødsdato"].asText())
     }
 
     @Test
-    fun `returnerer tom liste hvis ikke tilgang til Infotrygd`() {
+    fun `feiler hvis ikke tilgang til PDL`() {
+        stub401PdlRespons()
+
         testBehov(ikkeTilgangBehov())
 
-        val perioder = sendtMelding.løsning()
-
-        assertTrue(perioder.isEmpty())
+        assertEquals(emptyNode, sendtLøsning)
     }
 
-    private fun JsonNode.løsning() = this.path("@løsning").path(Personinfoløser.behov).map {
-        Personinfoperiode(it)
-    }
+    private fun JsonNode.personinfoløsning() = this.path("@løsning").path(Personinfoløser.behov)
 
     private fun testBehov(behov: String) {
         Personinfoløser(rapid, service)
@@ -104,14 +115,11 @@ internal class PersoninfoløserTest {
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "Institusjonsopphold" ],
+            "@behov" : [ "personinfo" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
-            "spleisBehovId" : "spleisBehovId",
             "vedtaksperiodeId" : "vedtaksperiodeId",
-            "fødselsnummer" : "fnr",
-            "institusjonsoppholdFom": "2020-01-01",
-            "institusjonsoppholdTom": "2020-01-31"
+            "fødselsnummer" : "fnr"
         }
         """
 
@@ -119,18 +127,15 @@ internal class PersoninfoløserTest {
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "Institusjonsopphold" ],
+            "@behov" : [ "personinfo" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
-            "spleisBehovId" : "spleisBehovId",
             "vedtaksperiodeId" : "vedtaksperiodeId",
-            "fødselsnummer" : "ikkeTilgang",
-            "institusjonsoppholdFom": "2020-01-01",
-            "institusjonsoppholdTom": "2020-01-31"
+            "fødselsnummer" : "ikkeTilgang"
         }
         """
 
-    private fun stubEksterneEndepunkt() {
+    private fun stubSts() {
         stubFor(
             get(urlPathEqualTo("/rest/v1/sts/token"))
                 .willReturn(
@@ -138,93 +143,54 @@ internal class PersoninfoløserTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(
-                            """{
-                        "token_type": "Bearer",
-                        "expires_in": 3599,
-                        "access_token": "1234abc"
-                    }"""
+                            """
+                            {
+                                "token_type": "Bearer",
+                                "expires_in": 3599,
+                                "access_token": "1234abc"
+                            }
+                            """
                         )
                 )
         )
+    }
+
+    private fun stubOkPdlRespons() {
         stubFor(
-            get(urlPathEqualTo("/api/v1/person/institusjonsopphold"))
+            post(urlPathEqualTo("/graphql"))
                 .withHeader("Accept", equalTo("application/json"))
-                .withHeader("Nav-Personident", equalTo("fnr"))
                 .withHeader("Nav-Call-Id", equalTo("id"))
+
                 .willReturn(
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(
-                            """[
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2020-01-01",
-                                            "faktiskSluttdato": "2020-01-31",
-                                            "forventetSluttdato": "2020-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2019-01-01",
-                                            "faktiskSluttdato": "2019-01-31",
-                                            "forventetSluttdato": "2019-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2019-01-01",
-                                            "faktiskSluttdato": null,
-                                            "forventetSluttdato": "2019-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2020-02-01",
-                                            "faktiskSluttdato": null,
-                                            "forventetSluttdato": "2020-03-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          }
-                                    ]"""
+                            """
+                            {
+                                "data": {
+                                    "hentPerson": {
+                                        "doedsfall": [
+                                            {
+                                                "doedsdato": "1962-07-08",
+                                                "metadata": {
+                                                    "master": "Freg"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                            """
                         )
                 )
         )
+    }
+
+    private fun stub401PdlRespons() {
         stubFor(
-            get(urlPathEqualTo("/api/v1/person/institusjonsopphold"))
+            post(urlPathEqualTo("/graphql"))
                 .withHeader("Accept", equalTo("application/json"))
-                .withHeader("Nav-Personident", equalTo("ikkeTilgang"))
                 .withHeader("Nav-Call-Id", equalTo("id"))
                 .willReturn(
                     aResponse()

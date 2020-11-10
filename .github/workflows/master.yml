@@ -10,11 +10,12 @@ jobs:
     name: set image name
     runs-on: ubuntu-latest
     steps:
-      - name: create docker tag
-        run: echo "TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
-      - name: create docker IMAGE variable
-        id: output-IMAGE-variable
-        run: echo "::set-output name=IMAGE::docker.pkg.github.com/${{ github.repository }}/sparkel-personinfo:${TAG}"
+    - id: create-docker-tag
+      run: echo "TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+    - id: create-image-variable
+      run: echo "::set-output name=IMAGE::docker.pkg.github.com/${{ github.repository }}/sparkel-personinfo:${TAG}"
+    outputs:
+      IMAGE: ${{steps.create-image-variable.outputs.IMAGE}}
 
   build:
     name: build docker image
@@ -31,11 +32,11 @@ jobs:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
       - name: build docker image
-        run: docker build . --pull -t ${{ needs.set_version.output-IMAGE-variable.outputs.IMAGE }}
+        run: docker build . --pull -t ${{ needs.set_version.outputs.IMAGE }}
       - name: push docker image
         run: |
           docker login --username "$GITHUB_REPOSITORY" -p ${{ secrets.GITHUB_TOKEN }} https://docker.pkg.github.com
-          docker push ${{ needs.set_version.output-IMAGE-variable.outputs.IMAGE }}
+          docker push ${{ needs.set_version.outputs.IMAGE }}
 
   snyk:
     name: check vulnerabilities
@@ -63,7 +64,7 @@ jobs:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-fss
           RESOURCE: deploy/dev.yml
-          IMAGE: ${{ needs.set_version.output-IMAGE-variable.outputs.IMAGE }}
+          IMAGE: ${{ needs.set_version.outputs.IMAGE }}
 
 #  deployProd:
 #    name: deploy to prod
@@ -76,4 +77,4 @@ jobs:
 #          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
 #          CLUSTER: prod-fss
 #          RESOURCE: deploy/prod.yml
-#          IMAGE: ${{ needs.set_version.output-IMAGE-variable.outputs.IMAGE }}
+#          IMAGE: ${{ needs.set_version.outputs.IMAGE }}

@@ -115,7 +115,7 @@ internal class PersoninfoløserTest {
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "personinfo" ],
+            "@behov" : [ "Dødsinfo" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "vedtaksperiodeId" : "vedtaksperiodeId",
@@ -127,7 +127,7 @@ internal class PersoninfoløserTest {
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "personinfo" ],
+            "@behov" : [ "Dødsinfo" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "vedtaksperiodeId" : "vedtaksperiodeId",

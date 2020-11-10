@@ -17,7 +17,7 @@ internal class Personinfoløser(
     private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
     companion object {
-        const val behov = "personinfo"
+        const val behov = "Dødsinfo"
     }
 
     init {

@@ -30,6 +30,7 @@ internal class PdlClient(
             .header("TEMA", "SYK")
             .header("Authorization", "Bearer $stsToken")
             .header("Nav-Consumer-Token", "Bearer $stsToken")
+            .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .header("Nav-Call-Id", behovId)
             .POST(HttpRequest.BodyPublishers.ofString(body))

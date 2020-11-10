@@ -48,5 +48,5 @@ spec:
   - name: PDL_URL
     value: https://pdl-api.nais.preprod.local/graphql
   - name: DUMMY_MODE
-    value: false
+    value: "false"
 

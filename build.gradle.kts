@@ -1,7 +1,7 @@
 val junitJupiterVersion = "5.6.2"
 
 plugins {
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
 }
 
 buildscript {
@@ -32,10 +32,10 @@ dependencies {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "12"
+        kotlinOptions.jvmTarget = "14"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "12"
+        kotlinOptions.jvmTarget = "14"
     }
 
     named<Jar>("jar") {

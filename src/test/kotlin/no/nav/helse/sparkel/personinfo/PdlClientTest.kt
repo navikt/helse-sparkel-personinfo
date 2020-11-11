@@ -38,11 +38,9 @@ internal class PdlInterpreterTest {
     }
 
     @Test
-    fun `To uenige masterdataoppføringer`() {
-        val thrown = assertThrows(RuntimeException::class.java) {
-            pdlInterpreter.interpret(objectMapper.readValue("pdl-hentPerson-to-ulike-response.json".loadFromResources()))
-        }
-        assertEquals("Masterdata er uenige om dødsårsak, trenger funksjonell avklaring. Mottok 1962-07-08 og 1962-07-09.", thrown.message)
+    fun `Velger PDL hvis to masterdataoppføringer er uenige`() {
+        val response = pdlInterpreter.interpret(objectMapper.readValue("pdl-hentPerson-to-ulike-response.json".loadFromResources()))
+        assertEquals(responseNode("1962-07-09"), response)
     }
 
     private fun responseNode(result: String?) = ObjectMapper().createObjectNode().put("dødsdato", result)

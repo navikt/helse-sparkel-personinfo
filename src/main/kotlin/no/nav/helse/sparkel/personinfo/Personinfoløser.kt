@@ -37,7 +37,7 @@ internal class Personinfoløser(
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
         sikkerlogg.info("mottok melding: ${packet.toJson()}")
         if (dummyMode) {
-            packet["@løsning"] = mapOf(behov to null)
+            packet["@løsning"] = mapOf(behov to mapOf("dødsdato" to null))
             context.send(packet.toJson())
             return
         }

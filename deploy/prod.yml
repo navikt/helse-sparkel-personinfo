@@ -47,5 +47,3 @@ spec:
     value: http://security-token-service.default.svc.nais.local
   - name: PDL_URL
     value: https://pdl-api.nais.adeo.no/graphql
-  - name: DUMMY_MODE
-    value: "true"

@@ -107,7 +107,7 @@ internal class PersoninfoløserTest {
     private fun JsonNode.personinfoløsning() = this.path("@løsning").path(Personinfoløser.behov)
 
     private fun testBehov(behov: String) {
-        Personinfoløser(rapid, service, false)
+        Personinfoløser(rapid, service)
         rapid.sendTestMessage(behov)
     }
 

@@ -21,7 +21,7 @@ internal fun createApp(env: Map<String, String>): RapidsConnection {
     val personinfoService = PersoninfoService(pdlClient)
 
     return RapidApplication.create(env).apply {
-        Personinfoløser(this, personinfoService, env.getValue("DUMMY_MODE") == "true")
+        Personinfoløser(this, personinfoService)
     }
 }
 

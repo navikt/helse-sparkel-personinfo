@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory
 
 internal class Personinfoløser(
     rapidsConnection: RapidsConnection,
-    private val personinfoService: PersoninfoService,
-    private val dummyMode: Boolean
+    private val personinfoService: PersoninfoService
 ) : River.PacketListener {
 
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -36,11 +35,6 @@ internal class Personinfoløser(
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
         sikkerlogg.info("mottok melding: ${packet.toJson()}")
-        if (dummyMode) {
-            packet["@løsning"] = mapOf(behov to mapOf("dødsdato" to null))
-            context.send(packet.toJson())
-            return
-        }
         val behovId = packet["@id"].asText()
         val vedtaksperiodeId = packet["vedtaksperiodeId"].asText()
         val fnr = packet["fødselsnummer"].asText()

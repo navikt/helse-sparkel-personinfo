@@ -22,10 +22,10 @@ internal class PersoninfoService(private val pdlClient: PdlClient) {
             keyValue("vedtaksperiodeId", vedtaksperiodeId)
         )
         sikkerlogg.info(
-            "løser behov: {} for {}, {}",
+            "løser behov: {} for {}",
             keyValue("id", behovId),
             keyValue("vedtaksperiodeId", vedtaksperiodeId),
-            keyValue("svarFraPDL", pdlRespons)
+            keyValue("svarFraPDL", pdlRespons.toString())
         )
         PdlInterpreter().interpret(pdlRespons)
     }

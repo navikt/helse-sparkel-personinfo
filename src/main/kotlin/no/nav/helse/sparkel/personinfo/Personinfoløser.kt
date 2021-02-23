@@ -3,6 +3,7 @@ package no.nav.helse.sparkel.personinfo
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageProblems
+import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
@@ -29,11 +30,11 @@ internal class Personinfoløser(
         }.register(this)
     }
 
-    override fun onError(problems: MessageProblems, context: RapidsConnection.MessageContext) {
+    override fun onError(problems: MessageProblems, context: MessageContext) {
         sikkerlogg.error("forstod ikke behov $behov med melding\n${problems.toExtendedReport()}")
     }
 
-    override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext) {
         sikkerlogg.info("mottok melding: ${packet.toJson()}")
         val behovId = packet["@id"].asText()
         val vedtaksperiodeId = packet["vedtaksperiodeId"].asText()
@@ -43,7 +44,7 @@ internal class Personinfoløser(
                 packet["@løsning"] = mapOf(behov to it)
             }
             packet.toJson().let { løsningJson ->
-                context.send(løsningJson)
+                context.publish(løsningJson)
                 sikkerlogg.info(
                     "sender svar {} for {}:\n\t{}",
                     keyValue("id", behovId),
